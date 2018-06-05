@@ -1,0 +1,12 @@
+{
+  "name": "sjacobsen_email_lambda",
+  "version": "1.0.0",
+  "description": "Sends an email from my website's contact us form using AWS Lambda",
+  "main": "index.js",
+  "author": "Shaun Jacobsen",
+  "license": "Unlicensed",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "^2.251.1"
+  }
+}
