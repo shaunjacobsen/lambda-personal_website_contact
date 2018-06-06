@@ -1,8 +1,27 @@
 const aws = require("aws-sdk");
+const axios = require("axios");
+const qs = require("qs");
 const ses = new aws.SES({ region: "us-east-1", apiVersion: "2010-12-01" });
 
-exports.handler = function(event, context, callback) {
-  console.log(event);
+const isCaptchaValidated = async captchaString => {
+  try {
+    const response = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      qs.stringify({
+        secret: process.env.CAPTCHA_SECRET,
+        response: captchaString
+      })
+    );
+    console.log("response from google", response);
+    return response.data.success;
+  } catch (e) {
+    console.log("captcha function error", e);
+    return false;
+  }
+};
+
+exports.handler = async function(event, context, callback) {
+  console.log("event", event);
   if (event.body !== null && event.body !== undefined) {
     let data = JSON.parse(event.body);
     const params = {
@@ -35,17 +54,27 @@ exports.handler = function(event, context, callback) {
       ReplyToAddresses: [data.from_email]
     };
 
-    ses
-      .sendEmail(params)
-      .promise()
-      .then(
-        callback(null, {
-          statusCode: 200,
-          body: JSON.stringify({ message: "Done" }),
-          isBase64Encoded: false
-        })
-      )
-      .catch(err => console.error(err, err.stack));
+    const isValid = await isCaptchaValidated(data.recaptcha);
+
+    if (isValid) {
+      ses
+        .sendEmail(params)
+        .promise()
+        .then(
+          callback(null, {
+            statusCode: 200,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: "Done" }),
+            isBase64Encoded: false
+          })
+        )
+        .catch(err => console.error(err, err.stack));
+    } else {
+      console.error("Captcha could not be validated");
+    }
   } else {
     console.error("No JSON body in email");
   }

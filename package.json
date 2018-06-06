@@ -7,6 +7,8 @@
   "license": "Unlicensed",
   "private": true,
   "dependencies": {
-    "aws-sdk": "^2.251.1"
+    "aws-sdk": "^2.251.1",
+    "axios": "^0.18.0",
+    "qs": "^6.5.2"
   }
 }
